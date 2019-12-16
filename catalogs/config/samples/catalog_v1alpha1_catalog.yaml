@@ -1,0 +1,7 @@
+apiVersion: catalog.tekton.dev/v1alpha1
+kind: Catalog
+metadata:
+  name: catalog-sample
+spec:
+  # Add fields here
+  foo: bar
