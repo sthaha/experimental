@@ -20,6 +20,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/tektoncd/experimental/catalogs/pkg/api/v1alpha1"
 	catalogv1alpha1 "github.com/tektoncd/experimental/catalogs/pkg/api/v1alpha1"
 )
 
@@ -33,10 +34,18 @@ type CatalogReconciler struct {
 // +kubebuilder:rbac:groups=catalog.tekton.dev,resources=catalogs/status,verbs=get;update;patch
 
 func (r *CatalogReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
-	_ = r.Log.WithValues("catalog", req.NamespacedName)
+	ctx := context.Background()
+	log := r.Log.WithValues("catalog", req.NamespacedName)
 
 	// your logic here
+	ctg := v1alpha1.Catalog{}
+	err := r.Get(ctx, req.NamespacedName, &ctg)
+	if err != nil {
+		log.Error(err, "getting catalog failed")
+		return ctrl.Result{}, err
+	}
+
+	log.Info("got from", "cat", ctg)
 
 	return ctrl.Result{}, nil
 }
