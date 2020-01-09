@@ -57,7 +57,11 @@ func initRepo(log logr.Logger, spec FetchSpec) error {
 
 	clonePath := spec.clonePath()
 
+	// if already cloned, cd to the cloned path
 	if _, err := os.Stat(clonePath); err == nil {
+		if err := os.Chdir(clonePath); err != nil {
+			return fmt.Errorf("failed to change directory with path %s; err: %w", clonePath, err)
+		}
 		return nil
 	}
 
