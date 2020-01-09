@@ -122,14 +122,6 @@ func Fetch(log logr.Logger, spec FetchSpec) error {
 	return nil
 }
 
-func Commit(log logr.Logger, revision, path string) (string, error) {
-	output, err := run(log, path, "rev-parse", "HEAD")
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSuffix(output, "\n"), nil
-}
-
 func SubmoduleFetch(log logr.Logger, path string) error {
 	if err := ensureHomeEnv(log); err != nil {
 		return err
