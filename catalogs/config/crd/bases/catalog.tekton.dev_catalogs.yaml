@@ -32,6 +32,8 @@ spec:
           properties:
             contextPath:
               type: string
+            revision:
+              type: string
             url:
               type: string
           required:

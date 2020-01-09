@@ -4,5 +4,7 @@ metadata:
   name: catalog-sample
 spec:
   # Add fields here
-  url: "https://github.com/sthaha/tekton-catalog"
+  url: "https://github.com/sthaha/tektoncd-catalog"
   contextPath: "/"
+  revision: "master"
+

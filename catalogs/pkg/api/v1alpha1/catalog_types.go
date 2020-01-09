@@ -21,6 +21,7 @@ import (
 type CatalogSpec struct {
 	URL         string `json:"url"`
 	ContextPath string `json:"contextPath,omitempty"`
+	Revision    string `json:"revision,omitempty"`
 }
 
 // CatalogStatus defines the observed state of Catalog
