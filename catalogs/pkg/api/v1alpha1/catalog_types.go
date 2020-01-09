@@ -26,6 +26,16 @@ type CatalogSpec struct {
 
 // CatalogStatus defines the observed state of Catalog
 type CatalogStatus struct {
+	// Information when was the last time the job was successfully scheduled.
+	// +optional
+	LastSync SyncInfo `json:"lastSynced,omitempty"`
+}
+
+type SyncInfo struct {
+	// Information when was the last time the job was successfully scheduled.
+	// +optional
+	Time     *metav1.Time `json:"time,omitempty"`
+	Checksum string       `json:"checksum,omitempty"`
 }
 
 // +kubebuilder:object:root=true

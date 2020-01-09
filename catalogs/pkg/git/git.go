@@ -53,50 +53,54 @@ func (f *FetchSpec) clonePath() string {
 	return filepath.Join(f.Path, u.Host, u.Path+"@"+f.Revision)
 }
 
-func initRepo(log logr.Logger, spec FetchSpec) error {
+func initRepo(log logr.Logger, spec FetchSpec) (Repo, error) {
+	log = log.WithName("init").WithValues("url", spec.URL)
 
 	clonePath := spec.clonePath()
+	repo := Repo{Path: clonePath}
 
 	// if already cloned, cd to the cloned path
 	if _, err := os.Stat(clonePath); err == nil {
 		if err := os.Chdir(clonePath); err != nil {
-			return fmt.Errorf("failed to change directory with path %s; err: %w", clonePath, err)
+			return Repo{}, fmt.Errorf("failed to change directory with path %s; err: %w", clonePath, err)
 		}
-		return nil
+		return repo, nil
 	}
 
-	if _, err := run(log, "", "init", clonePath); err != nil {
-		return err
+	if _, err := git(log, "", "init", clonePath); err != nil {
+		return Repo{}, err
 	}
 
 	if err := os.Chdir(clonePath); err != nil {
-		return fmt.Errorf("failed to change directory with path %s; err: %w", spec.Path, err)
+		return Repo{}, fmt.Errorf("failed to change directory with path %s; err: %w", spec.Path, err)
 	}
 
-	if _, err := run(log, "", "remote", "add", "origin", spec.URL); err != nil {
-		return err
+	if _, err := git(log, "", "remote", "add", "origin", spec.URL); err != nil {
+		return Repo{}, err
 	}
 
-	if _, err := run(log, "", "config", "http.sslVerify", strconv.FormatBool(spec.SSLVerify)); err != nil {
+	if _, err := git(log, "", "config", "http.sslVerify", strconv.FormatBool(spec.SSLVerify)); err != nil {
 		log.Error(err, "failed to set http.sslVerify in git configs")
-		return err
+		return Repo{}, err
 	}
-	return nil
+	return repo, nil
 }
 
 // Fetch fetches the specified git repository at the revision into path.
-func Fetch(log logr.Logger, spec FetchSpec) error {
+func Fetch(log logr.Logger, spec FetchSpec) (Repo, error) {
 	spec.sanitize()
 
 	if err := ensureHomeEnv(log); err != nil {
-		return err
+		return Repo{}, err
 	}
 
 	log.Info("clone to", "path", spec.clonePath())
 
-	if err := initRepo(log, spec); err != nil {
+	repo, err := initRepo(log, spec)
+
+	if err != nil {
 		os.RemoveAll(spec.clonePath())
-		return err
+		return Repo{}, err
 	}
 
 	fetchArgs := []string{
@@ -106,40 +110,21 @@ func Fetch(log logr.Logger, spec FetchSpec) error {
 		"origin", spec.Revision,
 	}
 
-	if _, err := run(log, "", fetchArgs...); err != nil {
+	if _, err := git(log, "", fetchArgs...); err != nil {
 		// Fetch can fail if an old commitid was used so try git pull, performing regardless of error
 		// as no guarantee that the same error is returned by all git servers gitlab, github etc...
-		if _, err := run(log, "", "pull", "--recurse-submodules=yes", "origin"); err != nil {
+		if _, err := git(log, "", "pull", "--recurse-submodules=yes", "origin"); err != nil {
 			log.Info("Failed to pull origin", "err", err)
 		}
-		if _, err := run(log, "", "checkout", spec.Revision); err != nil {
-			return err
+		if _, err := git(log, "", "checkout", spec.Revision); err != nil {
+			return Repo{}, err
 		}
-	} else if _, err := run(log, "", "reset", "--hard", "FETCH_HEAD"); err != nil {
-		return err
+	} else if _, err := git(log, "", "reset", "--hard", "FETCH_HEAD"); err != nil {
+		return Repo{}, err
 	}
-	log.Info("Successfully cloned", "url", spec.URL, "revision", spec.Revision, "path", spec.clonePath())
-	return nil
-}
+	log.Info("successfully cloned", "url", spec.URL, "revision", spec.Revision, "path", repo.Path)
 
-func SubmoduleFetch(log logr.Logger, path string) error {
-	if err := ensureHomeEnv(log); err != nil {
-		return err
-	}
-
-	if path != "" {
-		if err := os.Chdir(path); err != nil {
-			return fmt.Errorf("failed to change directory with path %s; err: %w", path, err)
-		}
-	}
-	if _, err := run(log, "", "submodule", "init"); err != nil {
-		return err
-	}
-	if _, err := run(log, "", "submodule", "update", "--recursive"); err != nil {
-		return err
-	}
-	log.Info("Successfully initialized and updated submodules in path %s", path)
-	return nil
+	return repo, nil
 }
 
 func ensureHomeEnv(log logr.Logger) error {
@@ -171,7 +156,17 @@ func ensureHomeEnv(log logr.Logger) error {
 	return nil
 }
 
-func run(log logr.Logger, dir string, args ...string) (string, error) {
+func git(log logr.Logger, dir string, args ...string) (string, error) {
+	output, err := rawGit(dir, args...)
+
+	if err != nil {
+		log.Error(err, "git error", "args", args, "output", output)
+		return "", err
+	}
+	return output, nil
+}
+
+func rawGit(dir string, args ...string) (string, error) {
 	c := exec.Command("git", args...)
 	var output bytes.Buffer
 	c.Stderr = &output
@@ -182,8 +177,20 @@ func run(log logr.Logger, dir string, args ...string) (string, error) {
 		c.Dir = dir
 	}
 	if err := c.Run(); err != nil {
-		log.Error(err, "git error", "args", args, "output", output.String())
 		return "", err
 	}
 	return output.String(), nil
+}
+
+type Repo struct {
+	Path string
+	head string
+}
+
+func (r Repo) Head() string {
+	if r.head == "" {
+		head, _ := rawGit("", "rev-parse", "HEAD")
+		r.head = head
+	}
+	return r.head
 }

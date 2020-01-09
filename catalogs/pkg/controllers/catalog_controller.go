@@ -24,7 +24,7 @@ import (
 	"github.com/tektoncd/experimental/catalogs/pkg/api/v1alpha1"
 	catalogv1alpha1 "github.com/tektoncd/experimental/catalogs/pkg/api/v1alpha1"
 	"github.com/tektoncd/experimental/catalogs/pkg/git"
-	//"github.com/tektoncd/pipeline/pkg/git"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // CatalogReconciler reconciles a Catalog object
@@ -70,14 +70,29 @@ func (r *CatalogReconciler) reconcileCatalog(cat v1alpha1.Catalog) (ctrl.Result,
 	log.Info(">>> cat", "url", spec.URL, "context", spec.ContextPath, "version", spec.Revision)
 
 	// download the repo
-	err := git.Fetch(log, git.FetchSpec{
+	repo, err := git.Fetch(log, git.FetchSpec{
 		URL:      spec.URL,
 		Revision: spec.Revision,
 		Path:     "/tmp/catalogs",
 	})
 
+	if repo.Head() == cat.Status.LastSync.Checksum {
+		log.Info("Already at latest HEAD")
+		return ctrl.Result{}, nil
+	}
+
 	log.Info("fetch error?", "err", err)
 	// get the sha
+	synced := cat.DeepCopy()
+
+	now := metav1.Now()
+	synced.Status.LastSync = v1alpha1.SyncInfo{
+		Time:     &now,
+		Checksum: repo.Head(),
+	}
+
+	r.Client.Update(context.Background(), synced)
+
 	// get status sha
 	// fill in the details
 
