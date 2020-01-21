@@ -28,14 +28,23 @@ type CatalogSpec struct {
 type CatalogStatus struct {
 	// Information when was the last time the job was successfully scheduled.
 	// +optional
-	LastSync SyncInfo `json:"lastSynced,omitempty"`
+	LastSync  SyncInfo         `json:"lastSynced,omitempty"`
+	Condition CatalogCondition `json:"condition,omitempty"`
+
+	// +optional
+	Tasks []TaskInfo `json:"tasks,omitempty"`
 }
 
 type SyncInfo struct {
 	// Information when was the last time the job was successfully scheduled.
 	// +optional
 	Time     *metav1.Time `json:"time,omitempty"`
-	Checksum string       `json:"checksum,omitempty"`
+	Revision string       `json:"revision,omitempty"`
+}
+
+type TaskInfo struct {
+	Name     string   `json:"name"`
+	Versions []string `json:"versions"`
 }
 
 // +kubebuilder:object:root=true
@@ -57,6 +66,13 @@ type CatalogList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Catalog `json:"items"`
 }
+
+// CatalogCondition represents the current condition of the catalog
+type CatalogCondition string
+
+const UnknownCondition CatalogCondition = "unknown"
+const ErrorCondition CatalogCondition = "error"
+const SuccessfullSync CatalogCondition = "success"
 
 func init() {
 	SchemeBuilder.Register(&Catalog{}, &CatalogList{})

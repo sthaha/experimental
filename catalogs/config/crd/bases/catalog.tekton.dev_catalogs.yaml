@@ -42,11 +42,15 @@ spec:
         status:
           description: CatalogStatus defines the observed state of Catalog
           properties:
+            condition:
+              description: CatalogCondition represents the current condition of the
+                catalog
+              type: string
             lastSynced:
               description: Information when was the last time the job was successfully
                 scheduled.
               properties:
-                checksum:
+                revision:
                   type: string
                 time:
                   description: Information when was the last time the job was successfully
@@ -54,6 +58,20 @@ spec:
                   format: date-time
                   type: string
               type: object
+            tasks:
+              items:
+                properties:
+                  name:
+                    type: string
+                  versions:
+                    items:
+                      type: string
+                    type: array
+                required:
+                - name
+                - versions
+                type: object
+              type: array
           type: object
       type: object
   versions:

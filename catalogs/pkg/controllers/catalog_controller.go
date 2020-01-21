@@ -76,7 +76,9 @@ func (r *CatalogReconciler) reconcileCatalog(cat v1alpha1.Catalog) (ctrl.Result,
 		Path:     "/tmp/catalogs",
 	})
 
-	if repo.Head() == cat.Status.LastSync.Checksum {
+	//repo.Tasks()
+
+	if repo.Head() == cat.Status.LastSync.Revision {
 		log.Info("Already at latest HEAD")
 		return ctrl.Result{}, nil
 	}
@@ -88,15 +90,22 @@ func (r *CatalogReconciler) reconcileCatalog(cat v1alpha1.Catalog) (ctrl.Result,
 	now := metav1.Now()
 	synced.Status.LastSync = v1alpha1.SyncInfo{
 		Time:     &now,
-		Checksum: repo.Head(),
+		Revision: repo.Head(),
+	}
+	synced.Status.Condition = v1alpha1.SuccessfullSync
+
+	tasks, err := repo.Tasks()
+	if err != nil {
+		synced.Status.Condition = v1alpha1.ErrorCondition
+	} else {
+		synced.Status.Tasks = tasks
 	}
 
 	r.Client.Update(context.Background(), synced)
 
 	// get status sha
-	// fill in the details
-
 	return ctrl.Result{}, nil
+
 }
 
 func (r *CatalogReconciler) reconcileDeletion(req ctrl.Request) (ctrl.Result, error) {

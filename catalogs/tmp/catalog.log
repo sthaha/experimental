@@ -1,0 +1,24 @@
+/home/sthaha/go/bin/controller-gen object:headerFile=./hack/boilerplate.go.txt paths=./api/...
+go fmt ./...
+go vet ./...
+go run cmd/catalogs/main.go
+2020-01-22T09:26:40.573+1000	INFO	controller-runtime.metrics	metrics server is starting to listen	{"addr": ":8080"}
+2020-01-22T09:26:40.575+1000	INFO	controller-runtime.controller	Starting EventSource	{"controller": "catalog", "source": "kind source: /, Kind="}
+2020-01-22T09:26:40.575+1000	INFO	setup	starting manager
+2020-01-22T09:26:40.575+1000	INFO	controller-runtime.manager	starting metrics server	{"path": "/metrics"}
+2020-01-22T09:26:40.676+1000	INFO	controller-runtime.controller	Starting Controller	{"controller": "catalog"}
+2020-01-22T09:26:40.776+1000	INFO	controller-runtime.controller	Starting workers	{"controller": "catalog", "worker count": 1}
+2020-01-22T09:26:40.776+1000	INFO	controllers.Catalog	>>> cat	{"catalog": "catalog-sample", "url": "https://github.com/sthaha/tektoncd-catalog", "context": "/", "version": "master"}
+2020-01-22T09:26:40.776+1000	INFO	controllers.Catalog	clone to	{"catalog": "catalog-sample", "path": "/tmp/catalogs/github.com/sthaha/tektoncd-catalog@master"}
+2020-01-22T09:26:43.084+1000	INFO	controllers.Catalog	successfully cloned	{"catalog": "catalog-sample", "url": "https://github.com/sthaha/tektoncd-catalog", "revision": "master", "path": "/tmp/catalogs/github.com/sthaha/tektoncd-catalog@master"}
+2020-01-22T09:26:43.088+1000	INFO	controllers.Catalog	fetch error?	{"catalog": "catalog-sample", "err": null}
+2020-01-22T09:26:43.092+1000	INFO	controllers.Catalog.init	xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx	{"catalog": "catalog-sample", "url": "https://github.com/sthaha/tektoncd-catalog"}
+2020-01-22T09:26:43.092+1000	INFO	controllers.Catalog.init	 ... checking 	{"catalog": "catalog-sample", "url": "https://github.com/sthaha/tektoncd-catalog", "filename": "s2i-go"}
+2020-01-22T09:26:43.092+1000	INFO	controllers.Catalog.init	      found:	{"catalog": "catalog-sample", "url": "https://github.com/sthaha/tektoncd-catalog", "file": "/tmp/catalogs/github.com/sthaha/tektoncd-catalog@master/tasks/s2i-go/v0.1.0/s2i-go.yaml"}
+2020-01-22T09:26:43.092+1000	INFO	controllers.Catalog.init	      found:	{"catalog": "catalog-sample", "url": "https://github.com/sthaha/tektoncd-catalog", "file": "/tmp/catalogs/github.com/sthaha/tektoncd-catalog@master/tasks/s2i-go/v1.1.1/s2i-go.yaml"}
+2020-01-22T09:26:43.102+1000	DEBUG	controller-runtime.controller	Successfully Reconciled	{"controller": "catalog", "request": "default/catalog-sample"}
+2020-01-22T09:26:43.102+1000	INFO	controllers.Catalog	>>> cat	{"catalog": "catalog-sample", "url": "https://github.com/sthaha/tektoncd-catalog", "context": "/", "version": "master"}
+2020-01-22T09:26:43.102+1000	INFO	controllers.Catalog	clone to	{"catalog": "catalog-sample", "path": "/tmp/catalogs/github.com/sthaha/tektoncd-catalog@master"}
+2020-01-22T09:26:45.319+1000	INFO	controllers.Catalog	successfully cloned	{"catalog": "catalog-sample", "url": "https://github.com/sthaha/tektoncd-catalog", "revision": "master", "path": "/tmp/catalogs/github.com/sthaha/tektoncd-catalog@master"}
+2020-01-22T09:26:45.321+1000	INFO	controllers.Catalog	Already at latest HEAD	{"catalog": "catalog-sample"}
+2020-01-22T09:26:45.321+1000	DEBUG	controller-runtime.controller	Successfully Reconciled	{"controller": "catalog", "request": "default/catalog-sample"}

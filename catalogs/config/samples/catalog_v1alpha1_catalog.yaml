@@ -7,4 +7,3 @@ spec:
   url: "https://github.com/sthaha/tektoncd-catalog"
   contextPath: "/"
   revision: "master"
-
