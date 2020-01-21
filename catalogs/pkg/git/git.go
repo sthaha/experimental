@@ -200,60 +200,45 @@ func (r Repo) Head() string {
 
 func (r Repo) Tasks() ([]catalog.TaskInfo, error) {
 
-	r.Log.Info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-
 	tasksPath := filepath.Join(r.Path, "tasks")
 	tasks, err := ioutil.ReadDir(tasksPath)
 	if err != nil {
 		return nil, err
 	}
 
-	//taskYamls := []string{}
-
-	taskInfo := func(f os.FileInfo) *catalog.TaskInfo {
-		if !f.IsDir() {
-			return nil
-		}
-
-		r.Log.Info(" ... checking ", "filename", f.Name())
-		// path/<task>/<version>/*
-		pattern := filepath.Join(tasksPath, f.Name(), "*", f.Name()+".yaml")
-
-		matches, err := filepath.Glob(pattern)
-		if err != nil {
-			r.Log.Error(err, "pattern  error")
-			return nil
-		}
-
-		ti := &catalog.TaskInfo{Name: f.Name(), Versions: []string{}}
-		for _, m := range matches {
-			r.Log.Info("      found:", "file", m)
-			dir, _ := filepath.Split(m)
-			ti.Versions = append(ti.Versions, filepath.Base(dir))
-		}
-
-		if len(ti.Versions) == 0 {
-			return nil
-		}
-		return ti
-	}
-
 	ret := []catalog.TaskInfo{}
 	for _, t := range tasks {
-		ret = append(ret, *taskInfo(t))
+		ret = append(ret, *taskInfo(r.Log, tasksPath, t))
 	}
 
 	return ret, nil
 }
 
-//func ReadDir(dirname string) ([]os.FileInfo, error) {
-func filterFiles(files []os.FileInfo, filterFn func(os.FileInfo) bool) []os.FileInfo {
-	ret := []os.FileInfo{}
-	for _, f := range files {
-		if filterFn(f) {
-			fmt.Printf(".............. adding . %v\n", f.Name())
-			ret = append(ret, f)
-		}
+func taskInfo(log logr.Logger, tasksPath string, f os.FileInfo) *catalog.TaskInfo {
+	if !f.IsDir() {
+		return nil
 	}
-	return ret
+
+	log.Info(" ... checking ", "filename", f.Name())
+	// path/<task>/<version>/*
+	pattern := filepath.Join(tasksPath, f.Name(), "*", f.Name()+".yaml")
+
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		log.Error(err, "pattern  error")
+		return nil
+	}
+
+	ti := &catalog.TaskInfo{Name: f.Name(), Versions: []string{}}
+	for _, m := range matches {
+		// TODO: validate if the task is valid by unmarshalling
+		log.Info("      found:", "file", m)
+		dir, _ := filepath.Split(m)
+		ti.Versions = append(ti.Versions, filepath.Base(dir))
+	}
+
+	if len(ti.Versions) == 0 {
+		return nil
+	}
+	return ti
 }
