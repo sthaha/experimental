@@ -32,7 +32,8 @@ type CatalogStatus struct {
 	Condition CatalogCondition `json:"condition,omitempty"`
 
 	// +optional
-	Tasks []TaskInfo `json:"tasks,omitempty"`
+	Tasks        []TaskInfo `json:"tasks,omitempty"`
+	ClusterTasks []TaskInfo `json:"clustertasks,omitempty"`
 }
 
 type SyncInfo struct {

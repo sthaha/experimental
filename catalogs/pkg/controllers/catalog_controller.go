@@ -77,7 +77,7 @@ func (r *CatalogReconciler) reconcileCatalog(cat v1alpha1.Catalog) (ctrl.Result,
 		Path:     "/tmp/catalogs",
 	})
 
-	//repo.Tasks()
+	log.Info(">>> finding cluster tasks", "url", spec.URL, "context", spec.ContextPath, "version", spec.Revision)
 
 	if repo.Head() == cat.Status.LastSync.Revision &&
 		status.Condition == v1alpha1.SuccessfullSync {
@@ -89,18 +89,32 @@ func (r *CatalogReconciler) reconcileCatalog(cat v1alpha1.Catalog) (ctrl.Result,
 	synced := cat.DeepCopy()
 
 	now := metav1.Now()
-	synced.Status.LastSync = v1alpha1.SyncInfo{
-		Time:     &now,
-		Revision: repo.Head(),
+	synced.Status = v1alpha1.CatalogStatus{
+		Tasks:        nil,
+		ClusterTasks: nil,
+		// default status successfull
+		Condition: v1alpha1.SuccessfullSync,
+
+		LastSync: v1alpha1.SyncInfo{
+			Time:     &now,
+			Revision: repo.Head(),
+		},
 	}
-	// default status successfull
-	synced.Status.Condition = v1alpha1.SuccessfullSync
 
 	tasks, err := repo.Tasks()
 	if err != nil {
+		r.Log.Error(err, "error finding tasks")
 		synced.Status.Condition = v1alpha1.ErrorCondition
 	} else {
 		synced.Status.Tasks = tasks
+	}
+
+	clusterTasks, err := repo.ClusterTasks()
+	if err != nil {
+		r.Log.Error(err, "error finding cluster tasks")
+		synced.Status.Condition = v1alpha1.ErrorCondition
+	} else {
+		synced.Status.ClusterTasks = clusterTasks
 	}
 
 	r.Client.Update(context.Background(), synced)

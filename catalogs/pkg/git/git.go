@@ -202,19 +202,41 @@ func (r Repo) Head() string {
 }
 
 func (r Repo) Tasks() ([]catalog.TaskInfo, error) {
+	return r.findTaskInfo("tasks")
+}
 
-	tasksPath := filepath.Join(r.Path, "tasks")
+func (r Repo) ClusterTasks() ([]catalog.TaskInfo, error) {
+	return r.findTaskInfo("clustertasks")
+}
+
+func ignoreNotExists(err error) error {
+	if os.IsNotExist(err) {
+		return nil
+	}
+	return err
+}
+
+func (r Repo) findTaskInfo(dir string) ([]catalog.TaskInfo, error) {
+	tasksPath := filepath.Join(r.Path, dir)
+	r.Log.Info("looking for tasks", "dir", dir)
+
 	tasks, err := ioutil.ReadDir(tasksPath)
 	if err != nil {
-		return nil, err
+		r.Log.Error(err, "failed to find task dir")
+		// NOTE: returns empty task list; upto caller to check for error
+		return []catalog.TaskInfo{}, ignoreNotExists(err)
 	}
 
+	r.Log.Info("looking for tasks", "dir", dir)
 	ret := []catalog.TaskInfo{}
 	for _, t := range tasks {
 		ret = append(ret, *taskInfo(r.Log, tasksPath, t))
 	}
 
+	r.Log.Info("found", "len", len(ret))
+
 	return ret, nil
+
 }
 
 func taskInfo(log logr.Logger, tasksPath string, task os.FileInfo) *catalog.TaskInfo {
