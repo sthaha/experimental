@@ -29,6 +29,8 @@ import (
 	"github.com/go-logr/logr"
 	homedir "github.com/mitchellh/go-homedir"
 	catalog "github.com/tektoncd/experimental/catalogs/pkg/api/v1alpha1"
+
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 // FetchSpec describes how to initialize and fetch from a Git repository.
@@ -56,7 +58,7 @@ func (f *FetchSpec) clonePath() string {
 }
 
 func initRepo(log logr.Logger, spec FetchSpec) (Repo, error) {
-	log = log.WithName("init").WithValues("url", spec.URL)
+	log = log.WithName("repo").WithValues("url", spec.URL)
 
 	clonePath := spec.clonePath()
 	repo := Repo{Path: clonePath, Log: log}
@@ -89,8 +91,9 @@ func initRepo(log logr.Logger, spec FetchSpec) (Repo, error) {
 }
 
 // Fetch fetches the specified git repository at the revision into path.
-func Fetch(log logr.Logger, spec FetchSpec) (Repo, error) {
+func Fetch(spec FetchSpec) (Repo, error) {
 	spec.sanitize()
+	log := ctrl.Log.WithName("git")
 
 	if err := ensureHomeEnv(log); err != nil {
 		return Repo{}, err
@@ -214,22 +217,22 @@ func (r Repo) Tasks() ([]catalog.TaskInfo, error) {
 	return ret, nil
 }
 
-func taskInfo(log logr.Logger, tasksPath string, f os.FileInfo) *catalog.TaskInfo {
-	if !f.IsDir() {
+func taskInfo(log logr.Logger, tasksPath string, task os.FileInfo) *catalog.TaskInfo {
+	if !task.IsDir() {
 		return nil
 	}
 
-	log.Info(" ... checking ", "filename", f.Name())
+	log.Info("checking ", "dir", task.Name())
 	// path/<task>/<version>/*
-	pattern := filepath.Join(tasksPath, f.Name(), "*", f.Name()+".yaml")
+	pattern := filepath.Join(tasksPath, task.Name(), "*", task.Name()+".yaml")
 
 	matches, err := filepath.Glob(pattern)
 	if err != nil {
-		log.Error(err, "pattern  error")
+		log.Error(err, "failed to find tasks")
 		return nil
 	}
 
-	ti := &catalog.TaskInfo{Name: f.Name(), Versions: []string{}}
+	ti := &catalog.TaskInfo{Name: task.Name(), Versions: []string{}}
 	for _, m := range matches {
 		// TODO: validate if the task is valid by unmarshalling
 		log.Info("      found:", "file", m)

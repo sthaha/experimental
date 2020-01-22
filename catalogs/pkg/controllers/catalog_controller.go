@@ -66,11 +66,12 @@ func (r *CatalogReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 func (r *CatalogReconciler) reconcileCatalog(cat v1alpha1.Catalog) (ctrl.Result, error) {
 	log := r.Log.WithValues("catalog", cat.Name)
 	spec := cat.Spec
+	status := cat.Status
 
 	log.Info(">>> cat", "url", spec.URL, "context", spec.ContextPath, "version", spec.Revision)
 
 	// download the repo
-	repo, err := git.Fetch(log, git.FetchSpec{
+	repo, err := git.Fetch(git.FetchSpec{
 		URL:      spec.URL,
 		Revision: spec.Revision,
 		Path:     "/tmp/catalogs",
@@ -78,13 +79,13 @@ func (r *CatalogReconciler) reconcileCatalog(cat v1alpha1.Catalog) (ctrl.Result,
 
 	//repo.Tasks()
 
-	if repo.Head() == cat.Status.LastSync.Revision {
+	if repo.Head() == cat.Status.LastSync.Revision &&
+		status.Condition == v1alpha1.SuccessfullSync {
 		log.Info("Already at latest HEAD")
 		return ctrl.Result{}, nil
 	}
 
 	log.Info("fetch error?", "err", err)
-	// get the sha
 	synced := cat.DeepCopy()
 
 	now := metav1.Now()
@@ -92,6 +93,7 @@ func (r *CatalogReconciler) reconcileCatalog(cat v1alpha1.Catalog) (ctrl.Result,
 		Time:     &now,
 		Revision: repo.Head(),
 	}
+	// default status successfull
 	synced.Status.Condition = v1alpha1.SuccessfullSync
 
 	tasks, err := repo.Tasks()
@@ -102,8 +104,6 @@ func (r *CatalogReconciler) reconcileCatalog(cat v1alpha1.Catalog) (ctrl.Result,
 	}
 
 	r.Client.Update(context.Background(), synced)
-
-	// get status sha
 	return ctrl.Result{}, nil
 
 }
