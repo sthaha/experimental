@@ -42,10 +42,31 @@ spec:
         status:
           description: CatalogStatus defines the observed state of Catalog
           properties:
+            clustertasks:
+              items:
+                properties:
+                  name:
+                    type: string
+                  versions:
+                    items:
+                      type: string
+                    type: array
+                required:
+                - name
+                - versions
+                type: object
+              type: array
             condition:
               description: CatalogCondition represents the current condition of the
                 catalog
-              type: string
+              properties:
+                code:
+                  type: string
+                details:
+                  type: string
+              required:
+              - code
+              type: object
             lastSynced:
               description: Information when was the last time the job was successfully
                 scheduled.
