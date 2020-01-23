@@ -22,7 +22,6 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/tektoncd/experimental/catalogs/pkg/api/v1alpha1"
-	catalogv1alpha1 "github.com/tektoncd/experimental/catalogs/pkg/api/v1alpha1"
 	"github.com/tektoncd/experimental/catalogs/pkg/git"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -38,7 +37,7 @@ type CatalogReconciler struct {
 
 func (r *CatalogReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&catalogv1alpha1.Catalog{}).
+		For(&v1alpha1.Catalog{}).
 		Complete(r)
 }
 
@@ -63,6 +62,24 @@ func (r *CatalogReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 }
 
+func (r *CatalogReconciler) markError(c v1alpha1.Catalog, err error) (ctrl.Result, error) {
+	cat := c.DeepCopy()
+
+	now := metav1.Now()
+	cat.Status.LastSync = v1alpha1.SyncInfo{Time: &now}
+
+	cat.Status.Condition = v1alpha1.CatalogCondition{
+		Code:    v1alpha1.ErrorCondition,
+		Details: err.Error(),
+	}
+
+	if updateErr := r.Client.Update(context.Background(), cat); updateErr != nil {
+		r.Log.Error(updateErr, "error setting catalog status to error")
+	}
+
+	return ctrl.Result{}, err
+}
+
 func (r *CatalogReconciler) reconcileCatalog(cat v1alpha1.Catalog) (ctrl.Result, error) {
 	log := r.Log.WithValues("catalog", cat.Name)
 	spec := cat.Spec
@@ -77,23 +94,26 @@ func (r *CatalogReconciler) reconcileCatalog(cat v1alpha1.Catalog) (ctrl.Result,
 		Path:     "/tmp/catalogs",
 	})
 
-	log.Info(">>> finding cluster tasks", "url", spec.URL, "context", spec.ContextPath, "version", spec.Revision)
+	if err != nil {
+		return r.markError(cat, err)
+	}
+
+	log.Info(">>> finding resources in repo", "url", spec.URL, "context", spec.ContextPath, "version", spec.Revision)
+	repo.Tasks()
 
 	if repo.Head() == cat.Status.LastSync.Revision &&
-		status.Condition == v1alpha1.SuccessfullSync {
+		status.Condition.Is(v1alpha1.SuccessfullSync) {
 		log.Info("Already at latest HEAD")
 		return ctrl.Result{}, nil
 	}
 
-	log.Info("fetch error?", "err", err)
 	synced := cat.DeepCopy()
-
 	now := metav1.Now()
 	synced.Status = v1alpha1.CatalogStatus{
 		Tasks:        nil,
 		ClusterTasks: nil,
 		// default status successfull
-		Condition: v1alpha1.SuccessfullSync,
+		Condition: v1alpha1.CatalogCondition{Code: v1alpha1.SuccessfullSync},
 
 		LastSync: v1alpha1.SyncInfo{
 			Time:     &now,
@@ -104,7 +124,7 @@ func (r *CatalogReconciler) reconcileCatalog(cat v1alpha1.Catalog) (ctrl.Result,
 	tasks, err := repo.Tasks()
 	if err != nil {
 		r.Log.Error(err, "error finding tasks")
-		synced.Status.Condition = v1alpha1.ErrorCondition
+		synced.Status.Condition.SetError("unable to find  tasks")
 	} else {
 		synced.Status.Tasks = tasks
 	}
@@ -112,7 +132,7 @@ func (r *CatalogReconciler) reconcileCatalog(cat v1alpha1.Catalog) (ctrl.Result,
 	clusterTasks, err := repo.ClusterTasks()
 	if err != nil {
 		r.Log.Error(err, "error finding cluster tasks")
-		synced.Status.Condition = v1alpha1.ErrorCondition
+		synced.Status.Condition.SetError("enabled to find clustertasks")
 	} else {
 		synced.Status.ClusterTasks = clusterTasks
 	}

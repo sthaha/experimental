@@ -29,6 +29,7 @@ import (
 	"github.com/go-logr/logr"
 	homedir "github.com/mitchellh/go-homedir"
 	catalog "github.com/tektoncd/experimental/catalogs/pkg/api/v1alpha1"
+	"github.com/tektoncd/experimental/catalogs/pkg/tekton/validate"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -202,11 +203,11 @@ func (r Repo) Head() string {
 }
 
 func (r Repo) Tasks() ([]catalog.TaskInfo, error) {
-	return r.findTaskInfo("tasks")
+	return r.findTaskInfo("tasks", validate.Task)
 }
 
 func (r Repo) ClusterTasks() ([]catalog.TaskInfo, error) {
-	return r.findTaskInfo("clustertasks")
+	return r.findTaskInfo("clustertasks", validate.ClusterTask)
 }
 
 func ignoreNotExists(err error) error {
@@ -216,10 +217,10 @@ func ignoreNotExists(err error) error {
 	return err
 }
 
-func (r Repo) findTaskInfo(dir string) ([]catalog.TaskInfo, error) {
-	tasksPath := filepath.Join(r.Path, dir)
-	r.Log.Info("looking for tasks", "dir", dir)
+func (r Repo) findTaskInfo(dir string, isValid validate.Fn) ([]catalog.TaskInfo, error) {
+	r.Log.Info("looking for " + dir)
 
+	tasksPath := filepath.Join(r.Path, dir)
 	tasks, err := ioutil.ReadDir(tasksPath)
 	if err != nil {
 		r.Log.Error(err, "failed to find task dir")
@@ -227,10 +228,9 @@ func (r Repo) findTaskInfo(dir string) ([]catalog.TaskInfo, error) {
 		return []catalog.TaskInfo{}, ignoreNotExists(err)
 	}
 
-	r.Log.Info("looking for tasks", "dir", dir)
 	ret := []catalog.TaskInfo{}
 	for _, t := range tasks {
-		ret = append(ret, *taskInfo(r.Log, tasksPath, t))
+		ret = append(ret, *taskInfo(r.Log, tasksPath, t, isValid))
 	}
 
 	r.Log.Info("found", "len", len(ret))
@@ -239,7 +239,7 @@ func (r Repo) findTaskInfo(dir string) ([]catalog.TaskInfo, error) {
 
 }
 
-func taskInfo(log logr.Logger, tasksPath string, task os.FileInfo) *catalog.TaskInfo {
+func taskInfo(log logr.Logger, tasksPath string, task os.FileInfo, isValid validate.Fn) *catalog.TaskInfo {
 	if !task.IsDir() {
 		return nil
 	}
@@ -256,8 +256,12 @@ func taskInfo(log logr.Logger, tasksPath string, task os.FileInfo) *catalog.Task
 
 	ti := &catalog.TaskInfo{Name: task.Name(), Versions: []string{}}
 	for _, m := range matches {
-		// TODO: validate if the task is valid by unmarshalling
 		log.Info("      found:", "file", m)
+		if x := validate.Task(m); x != nil {
+			log.Error(x, "validation failed, skipping", "path", m)
+			continue
+		}
+
 		dir, _ := filepath.Split(m)
 		ti.Versions = append(ti.Versions, filepath.Base(dir))
 	}

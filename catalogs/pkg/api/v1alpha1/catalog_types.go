@@ -69,11 +69,25 @@ type CatalogList struct {
 }
 
 // CatalogCondition represents the current condition of the catalog
-type CatalogCondition string
+type CatalogCondition struct {
+	Code    Condition `json:"code"`
+	Details string    `json:"details,omitempty"`
+}
 
-const UnknownCondition CatalogCondition = "unknown"
-const ErrorCondition CatalogCondition = "error"
-const SuccessfullSync CatalogCondition = "success"
+type Condition string
+
+const UnknownCondition Condition = "unknown"
+const ErrorCondition Condition = "error"
+const SuccessfullSync Condition = "success"
+
+func (c CatalogCondition) Is(expected Condition) bool {
+	return c.Code == expected
+}
+
+func (c *CatalogCondition) SetError(details string) {
+	c.Code = ErrorCondition
+	c.Details = details
+}
 
 func init() {
 	SchemeBuilder.Register(&Catalog{}, &CatalogList{})
