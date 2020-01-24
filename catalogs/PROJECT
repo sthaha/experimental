@@ -5,3 +5,6 @@ resources:
 - group: catalog
   version: v1alpha1
   kind: Catalog
+- group: catalog
+  version: v1alpha1
+  kind: CatalogInstall

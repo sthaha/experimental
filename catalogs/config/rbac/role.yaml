@@ -9,6 +9,26 @@ rules:
 - apiGroups:
   - catalog.tekton.dev
   resources:
+  - cataloginstalls
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - catalog.tekton.dev
+  resources:
+  - cataloginstalls/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - catalog.tekton.dev
+  resources:
   - catalogs
   verbs:
   - create
