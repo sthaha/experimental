@@ -99,7 +99,6 @@ func (r *CatalogReconciler) reconcileCatalog(cat v1alpha1.Catalog) (ctrl.Result,
 	}
 
 	log.Info(">>> finding resources in repo", "url", spec.URL, "context", spec.ContextPath, "version", spec.Revision)
-	repo.Tasks()
 
 	if repo.Head() == cat.Status.LastSync.Revision &&
 		status.Condition.Is(v1alpha1.SuccessfullSync) {
