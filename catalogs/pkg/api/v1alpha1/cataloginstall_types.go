@@ -22,14 +22,18 @@ import (
 
 // CatalogInstallSpec defines the desired state of CatalogInstall
 type CatalogInstallSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	CatalogRef CatalogRef        `json:"catalogRef"`
+	Tasks      []TaskInstallSpec `json:"tasks"`
+}
+
+type CatalogRef string
+
+type TaskInstallSpec struct {
+	Name string `json:"name"`
 }
 
 // CatalogInstallStatus defines the observed state of CatalogInstall
 type CatalogInstallStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
 }
 
 // +kubebuilder:object:root=true
