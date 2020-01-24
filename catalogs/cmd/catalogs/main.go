@@ -73,6 +73,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "CatalogInstall")
 		os.Exit(1)
 	}
+
+	//  make sure to set `ENABLE_WEBHOOKS=false` when we run locally.
+	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+		if err = (&catalogv1alpha1.Catalog{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Catalog")
+			os.Exit(1)
+		}
+	}
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")
