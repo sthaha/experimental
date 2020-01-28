@@ -10,7 +10,7 @@ spec:
   names:
     kind: CatalogInstall
     plural: cataloginstalls
-  scope: ""
+  scope: Namespaced
   validation:
     openAPIV3Schema:
       description: CatalogInstall is the Schema for the cataloginstalls API

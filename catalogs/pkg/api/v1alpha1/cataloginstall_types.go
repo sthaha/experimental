@@ -22,14 +22,16 @@ import (
 
 // CatalogInstallSpec defines the desired state of CatalogInstall
 type CatalogInstallSpec struct {
-	CatalogRef CatalogRef        `json:"catalogRef"`
-	Tasks      []TaskInstallSpec `json:"tasks"`
+	CatalogRef   CatalogRef        `json:"catalogRef"`
+	Tasks        []TaskInstallSpec `json:"tasks"`
+	ClusterTasks []TaskInstallSpec `json:"clusterTasks"`
 }
 
 type CatalogRef string
 
 type TaskInstallSpec struct {
-	Name string `json:"name"`
+	Name    string `json:"name"`
+	Version string `json:"version"`
 }
 
 // CatalogInstallStatus defines the observed state of CatalogInstall
@@ -37,6 +39,7 @@ type CatalogInstallStatus struct {
 }
 
 // +kubebuilder:object:root=true
+// +kubebuilder:resource:scope="Namespaced"
 
 // CatalogInstall is the Schema for the cataloginstalls API
 type CatalogInstall struct {
