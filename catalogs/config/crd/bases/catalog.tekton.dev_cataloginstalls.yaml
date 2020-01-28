@@ -32,17 +32,33 @@ spec:
           properties:
             catalogRef:
               type: string
+            clusterTasks:
+              items:
+                properties:
+                  name:
+                    type: string
+                  version:
+                    type: string
+                required:
+                - name
+                - version
+                type: object
+              type: array
             tasks:
               items:
                 properties:
                   name:
                     type: string
+                  version:
+                    type: string
                 required:
                 - name
+                - version
                 type: object
               type: array
           required:
           - catalogRef
+          - clusterTasks
           - tasks
           type: object
         status:
