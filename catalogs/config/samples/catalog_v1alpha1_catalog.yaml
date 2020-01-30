@@ -1,7 +1,7 @@
 apiVersion: catalog.tekton.dev/v1alpha1
 kind: Catalog
 metadata:
-  name: catalog-sample
+  name: sthaha
 spec:
   # Add fields here
   url: "https://github.com/sthaha/tektoncd-catalog"

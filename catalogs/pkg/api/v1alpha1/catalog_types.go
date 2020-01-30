@@ -3,7 +3,7 @@ Copyright 2019 The Tekton Authors
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-		http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,8 @@ package v1alpha1
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // CatalogSpec defines the desired state of Catalog
 type CatalogSpec struct {
@@ -48,26 +50,6 @@ type TaskInfo struct {
 	Versions []string `json:"versions"`
 }
 
-// +kubebuilder:object:root=true
-
-// Catalog is the Schema for the catalogs API
-type Catalog struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec   CatalogSpec   `json:"spec,omitempty"`
-	Status CatalogStatus `json:"status,omitempty"`
-}
-
-// +kubebuilder:object:root=true
-
-// CatalogList contains a list of Catalog
-type CatalogList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Catalog `json:"items"`
-}
-
 // CatalogCondition represents the current condition of the catalog
 type CatalogCondition struct {
 	Code    Condition `json:"code"`
@@ -87,6 +69,27 @@ func (c CatalogCondition) Is(expected Condition) bool {
 func (c *CatalogCondition) SetError(details string) {
 	c.Code = ErrorCondition
 	c.Details = details
+}
+
+// +kubebuilder:object:root=true
+// +kubebuilder:resource:scope=Cluster
+
+// Catalog is the Schema for the catalogs API
+type Catalog struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   CatalogSpec   `json:"spec,omitempty"`
+	Status CatalogStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// CatalogList contains a list of Catalog
+type CatalogList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Catalog `json:"items"`
 }
 
 func init() {

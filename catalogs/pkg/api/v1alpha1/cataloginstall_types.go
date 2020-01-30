@@ -22,12 +22,10 @@ import (
 
 // CatalogInstallSpec defines the desired state of CatalogInstall
 type CatalogInstallSpec struct {
-	CatalogRef   CatalogRef        `json:"catalogRef"`
+	CatalogRef   string            `json:"catalogRef"`
 	Tasks        []TaskInstallSpec `json:"tasks"`
 	ClusterTasks []TaskInstallSpec `json:"clusterTasks"`
 }
-
-type CatalogRef string
 
 type TaskInstallSpec struct {
 	Name    string `json:"name"`
@@ -36,6 +34,7 @@ type TaskInstallSpec struct {
 
 // CatalogInstallStatus defines the observed state of CatalogInstall
 type CatalogInstallStatus struct {
+	Condition CatalogInstallCondition `json:"condition,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -49,6 +48,17 @@ type CatalogInstall struct {
 	Spec   CatalogInstallSpec   `json:"spec,omitempty"`
 	Status CatalogInstallStatus `json:"status,omitempty"`
 }
+
+// CatalogCondition represents the current condition of the catalog
+type CatalogInstallCondition struct {
+	Code    InstallCondition `json:"code"`
+	Details string           `json:"details,omitempty"`
+}
+
+type InstallCondition string
+
+const InstallError InstallCondition = "error"
+const InstallSuccessful InstallCondition = "success"
 
 // +kubebuilder:object:root=true
 

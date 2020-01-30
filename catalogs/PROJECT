@@ -1,10 +1,10 @@
-version: "2"
 domain: tekton.dev
 repo: github.com/tektoncd/experimental/catalogs
 resources:
 - group: catalog
-  version: v1alpha1
   kind: Catalog
-- group: catalog
   version: v1alpha1
+- group: catalog
   kind: CatalogInstall
+  version: v1alpha1
+version: "2"

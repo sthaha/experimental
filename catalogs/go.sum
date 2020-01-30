@@ -192,6 +192,8 @@ github.com/stretchr/testify v1.3.0 h1:TivCn/peBQ7UY8ooIcPgZFpTNSz0Q2U6UrFlUfqbe0
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/stretchr/testify v1.4.0 h1:2E4SXV/wtOkTonXsotYi4li6zVWxYlZuYNCXe9XRJyk=
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
+github.com/tektoncd/experimental v0.0.0-20200123101950-536718ceb931 h1:uKIz3EcwYMjSWx7GEvUdoDhiEJwTrKqMffYhBnE2RSM=
+github.com/tektoncd/experimental v0.0.0-20200129162352-5c5229fdcb51 h1:c1zzM2IwOy2ln/8wphlVkM4uuNGNPHqRzOG+wU5P+HE=
 github.com/tektoncd/pipeline v0.9.2 h1:eJ9x1KY/XpUGmTjNdowRHF7G9FozKGptHnEGwKO4W/I=
 github.com/tektoncd/pipeline v0.9.2/go.mod h1:IZzJdiX9EqEMuUcgdnElozdYYRh0/ZRC+NKMLj1K3Yw=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=

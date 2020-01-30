@@ -10,7 +10,7 @@ spec:
   names:
     kind: Catalog
     plural: catalogs
-  scope: ""
+  scope: Cluster
   validation:
     openAPIV3Schema:
       description: Catalog is the Schema for the catalogs API

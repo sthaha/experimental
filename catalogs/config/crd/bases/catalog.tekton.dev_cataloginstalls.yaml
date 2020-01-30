@@ -63,6 +63,18 @@ spec:
           type: object
         status:
           description: CatalogInstallStatus defines the observed state of CatalogInstall
+          properties:
+            condition:
+              description: CatalogCondition represents the current condition of the
+                catalog
+              properties:
+                code:
+                  type: string
+                details:
+                  type: string
+              required:
+              - code
+              type: object
           type: object
       type: object
   versions:

@@ -1,31 +1,9 @@
-
----
+# permissions to do edit catalogs.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
-  name: manager-role
+  name: catalog-editor-role
 rules:
-- apiGroups:
-  - apis.tekton.dev
-  resources:
-  - cataloginstalls
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - apis.tekton.dev
-  resources:
-  - cataloginstalls/status
-  verbs:
-  - get
-  - patch
-  - update
 - apiGroups:
   - catalog.tekton.dev
   resources:

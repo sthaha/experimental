@@ -2,6 +2,14 @@ apiVersion: catalog.tekton.dev/v1alpha1
 kind: CatalogInstall
 metadata:
   name: cataloginstall-sample
+  namespace: test-catalog
 spec:
   # Add fields here
-  foo: bar
+  catalogRef: sthaha
+  tasks:
+    - name: s2i-go
+      version: 0.1.0
+
+  clusterTasks:
+    - name: s2i-go
+      version: 0.1.0

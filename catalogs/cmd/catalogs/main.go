@@ -59,20 +59,23 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.CatalogReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Catalog"),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Catalog")
-		os.Exit(1)
-	}
 	if err = (&controllers.CatalogInstallReconciler{
 		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("CatalogInstall"),
+		Log:    ctrl.Log.WithName("controllers").WithName("Install"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CatalogInstall")
 		os.Exit(1)
 	}
+
+	if err = (&controllers.CatalogReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("Catalog"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Catalog")
+		os.Exit(1)
+	}
+	// +kubebuilder:scaffold:builder
 
 	//  make sure to set `ENABLE_WEBHOOKS=false` when we run locally.
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
@@ -80,8 +83,12 @@ func main() {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Catalog")
 			os.Exit(1)
 		}
+
+		if err = (&catalogv1alpha1.Catalog{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Catalog")
+			os.Exit(1)
+		}
 	}
-	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {

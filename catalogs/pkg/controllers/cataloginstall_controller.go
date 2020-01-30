@@ -17,10 +17,11 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
+	apis "github.com/tektoncd/experimental/catalogs/pkg/api/v1alpha1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/tektoncd/experimental/catalogs/pkg/api/v1alpha1"
 )
 
 // CatalogInstallReconciler reconciles a CatalogInstall object
@@ -29,20 +30,95 @@ type CatalogInstallReconciler struct {
 	Log logr.Logger
 }
 
-// +kubebuilder:rbac:groups=catalog.tekton.dev,resources=cataloginstalls,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=catalog.tekton.dev,resources=cataloginstalls/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=apis.tekton.dev,resources=cataloginstalls,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apis.tekton.dev,resources=cataloginstalls/status,verbs=get;update;patch
 
 func (r *CatalogInstallReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
-	_ = r.Log.WithValues("cataloginstall", req.NamespacedName)
+	ctx := context.Background()
+	log := r.Log.WithValues("req", req.NamespacedName)
 
-	// your logic here
+	ci := apis.CatalogInstall{}
+	err := r.Get(ctx, req.NamespacedName, &ci)
 
-	return ctrl.Result{}, nil
+	if err != nil {
+		log.Error(err, "getting resource failed")
+		if errors.IsNotFound(err) {
+			log.Info("Reconcile deletion of resource")
+			return r.reconcileDeletion(req)
+		}
+		return ctrl.Result{}, err
+	}
+
+	return r.reconcileInstall(ci)
 }
 
 func (r *CatalogInstallReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.CatalogInstall{}).
+		For(&apis.CatalogInstall{}).
 		Complete(r)
+}
+
+func (r *CatalogInstallReconciler) reconcileDeletion(req ctrl.Request) (ctrl.Result, error) {
+	return ctrl.Result{}, nil
+}
+
+func (r *CatalogInstallReconciler) reconcileInstall(ci apis.CatalogInstall) (ctrl.Result, error) {
+	// does the catalog exist?
+	cat, err := r.catalogForRef(ci.Spec.CatalogRef)
+	if err != nil {
+		r.markError(ci, err)
+		return ctrl.Result{}, nil
+	}
+	// can I get the git repo?
+	// does the tasks exist?
+	// can I apply the task?
+
+	if res, err := r.reconcileTasks(ci, *cat); err != nil {
+		return res, err
+	}
+	return ctrl.Result{}, nil
+}
+
+func (r *CatalogInstallReconciler) reconcileTasks(ci apis.CatalogInstall, cat apis.Catalog) (ctrl.Result, error) {
+	log := r.Log.WithValues("install-tasks", ci.Namespace)
+
+	tasks := ci.Spec.Tasks
+	log.Info("Install ", "tasks", tasks)
+	if tasks == nil || len(tasks) == 0 {
+		return ctrl.Result{}, nil
+	}
+
+	//for _, t := range tasks {
+
+	//}
+
+	return ctrl.Result{}, nil
+}
+
+func (r *CatalogInstallReconciler) catalogForRef(ref string) (*apis.Catalog, error) {
+	log := r.Log.WithValues("ref", ref)
+
+	log.Info("finding ref")
+	res := types.NamespacedName{Name: ref}
+	cat := apis.Catalog{}
+	if err := r.Get(context.Background(), res, &cat); err != nil {
+		log.Error(err, "failed wtf!")
+		return nil, err
+	}
+
+	return &cat, nil
+}
+
+func (r *CatalogInstallReconciler) markError(c apis.CatalogInstall, err error) (ctrl.Result, error) {
+	ci := c.DeepCopy()
+	ci.Status.Condition = apis.CatalogInstallCondition{
+		Code:    apis.InstallError,
+		Details: err.Error(),
+	}
+
+	if updateErr := r.Client.Update(context.Background(), ci); updateErr != nil {
+		r.Log.Error(updateErr, "error setting catalog status to error")
+	}
+
+	return ctrl.Result{}, err
 }
