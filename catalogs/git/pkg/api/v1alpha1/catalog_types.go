@@ -50,6 +50,10 @@ type TaskInfo struct {
 	Versions []string `json:"versions"`
 }
 
+func (c *Catalog) SyncedSuccessfully() bool {
+	return c.Status.Condition.Is(SuccessfullSync)
+}
+
 // CatalogCondition represents the current condition of the catalog
 type CatalogCondition struct {
 	Code    Condition `json:"code"`

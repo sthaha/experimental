@@ -91,6 +91,21 @@ func initRepo(log logr.Logger, spec FetchSpec) (Repo, error) {
 	return repo, nil
 }
 
+func FetchSpecForCatalog(c catalog.Catalog) FetchSpec {
+	return FetchSpec{
+		URL:      c.Spec.URL,
+		Revision: c.Spec.Revision,
+		Path:     "/tmp/catalogs",
+	}
+}
+
+func RepoForCatalog(c catalog.Catalog) (*Repo, error) {
+	spec := FetchSpecForCatalog(c)
+	log := ctrl.Log.WithName("git").WithValues("url", spec.URL)
+	return Repo{Log: git, Path: spec.clonePath()}
+
+}
+
 // Fetch fetches the specified git repository at the revision into path.
 func Fetch(spec FetchSpec) (Repo, error) {
 	spec.sanitize()

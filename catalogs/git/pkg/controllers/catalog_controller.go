@@ -85,26 +85,18 @@ func (r *CatalogReconciler) markError(c v1alpha1.Catalog, err error) (ctrl.Resul
 
 func (r *CatalogReconciler) reconcileCatalog(cat v1alpha1.Catalog) (ctrl.Result, error) {
 	log := r.Log.WithValues("catalog", cat.Name)
-	spec := cat.Spec
-	status := cat.Status
 
+	spec := cat.Spec
 	log.Info(">>> cat", "url", spec.URL, "context", spec.ContextPath, "version", spec.Revision)
 
-	// download the repo
-	repo, err := git.Fetch(git.FetchSpec{
-		URL:      spec.URL,
-		Revision: spec.Revision,
-		Path:     "/tmp/catalogs",
-	})
-
+	repo, err := git.Fetch(git.FetchSpecForCatalog(cat))
 	if err != nil {
 		return r.markError(cat, err)
 	}
 
 	log.Info(">>> finding resources in repo", "url", spec.URL, "context", spec.ContextPath, "version", spec.Revision)
 
-	if repo.Head() == cat.Status.LastSync.Revision &&
-		status.Condition.Is(v1alpha1.SuccessfullSync) {
+	if repo.Head() == cat.Status.LastSync.Revision && cat.SyncedSuccessfully() {
 		log.Info("Already at latest HEAD")
 		return ctrl.Result{}, nil
 	}

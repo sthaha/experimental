@@ -15,14 +15,18 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-logr/logr"
 	apis "github.com/tektoncd/experimental/catalogs/pkg/api/v1alpha1"
+	err_utils "github.com/tektoncd/experimental/catalogs/pkg/errors"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+var errInvalidCatalog = fmt.Errorf("Catalog failed to sync")
 
 // CatalogInstallReconciler reconciles a CatalogInstall object
 type CatalogInstallReconciler struct {
@@ -63,12 +67,31 @@ func (r *CatalogInstallReconciler) reconcileDeletion(req ctrl.Request) (ctrl.Res
 }
 
 func (r *CatalogInstallReconciler) reconcileInstall(ci apis.CatalogInstall) (ctrl.Result, error) {
+	log := r.Log.WithValues("ref", ci.Spec.CatalogRef)
+
 	// does the catalog exist?
 	cat, err := r.catalogForRef(ci.Spec.CatalogRef)
 	if err != nil {
 		r.markError(ci, err)
+		log.Info("catalog does not exist", "action", "error")
+		return ctrl.Result{}, err_utils.IgnoreNotFound(err)
+	}
+
+	if !cat.SyncedSuccessfully() {
+		r.markError(ci, errInvalidCatalog)
+		log.Info("catalog referred is not in success status", "action", "error")
 		return ctrl.Result{}, nil
 	}
+
+	//repo, err := git.Fetch(git.FetchSpecForCatalog(*cat))
+	//if !cat.SyncedSuccessfully() {
+	//r.markError(ci, errInvalidCatalog)
+	//log.Info("catalog referred is not in success status", "action", "error")
+	//return ctrl.Result{}, nil
+	//}
+
+	//log.Info("repo found", "head", repo.Head())
+
 	// can I get the git repo?
 	// does the tasks exist?
 	// can I apply the task?
