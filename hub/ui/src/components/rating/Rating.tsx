@@ -168,18 +168,20 @@ const Rating: React.FC = (props: any) => {
     login = <form >
       <Link to="/login">
         <ul className="rate-area" >
-          <input className="rate-area" type="radio"
-            id="5-star" name="rating" value="5" />
-          <label htmlFor="5-star"></label>
-          <input type="radio" id="4-star"
-            name="rating" value="4" />
-          <label htmlFor="4-star" ></label>
-          <input type="radio" id="3-star" name="rating"
-            value="3" /><label htmlFor="3-star" ></label>
-          <input type="radio" id="2-star" name="rating"
-            value="2" /><label htmlFor="2-star" ></label>
-          <input type="radio" id="1-star" name="rating"
-            value="1" /><label htmlFor="1-star" ></label>
+          <input className="rate-area" type="radio" id="5-star" name="rating" value="5" />
+          <label htmlFor="5-star"> <StarIcon /> </label>
+
+          <input type="radio" id="4-star" name="rating" value="4" />
+          <label htmlFor="4-star" > <StarIcon /> </label>
+
+          <input type="radio" id="3-star" name="rating" value="3" />
+          <label htmlFor="3-star" > <StarIcon/> </label>
+
+          <input type="radio" id="2-star" name="rating" value="2" />
+          <label htmlFor="2-star" > <StarIcon /> </label>
+
+          <input type="radio" id="1-star" name="rating" value="1" />
+          <label htmlFor="1-star" > <StarIcon /> </label>
         </ul>
       </Link>
     </form>;
